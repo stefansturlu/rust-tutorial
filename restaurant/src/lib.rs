@@ -1,3 +1,6 @@
+use std::io::{self, Write};
+use std::collections::*;
+
 mod front_of_house {
     pub mod hosting {
         pub fn add_to_waitlist() {}
@@ -67,6 +70,35 @@ pub fn eat_at_restaurant() {
 
 }
 
+
+// use crate::front_of_house::hosting;
+
+mod customer {
+    pub fn eat_at_restaurant() {
+        // This doesn't work unless use crate::front_of_house::hosting is inside mod customer block
+        // hosting::add_to_waitlist();
+        // Alternatively, you can use super, like this:
+        super::hosting::add_to_waitlist();
+    }
+}
+
+use crate::front_of_house::hosting;
+pub fn eat_at_restaurant_2() {
+    hosting::add_to_waitlist();
+}
+
+use std::fmt;
+use std::io::Result as IoResult;
+
+fn function1() -> fmt::Result {
+    // --snip--
+    fmt::Result::Ok(())
+}
+
+fn function2() -> IoResult<()> {
+    // --snip--
+    IoResult::Ok(())
+}
 /*
 If you plan on sharing your library crate so other projects can use your code,
 your public API is your contract with users of your crate that determines how 
