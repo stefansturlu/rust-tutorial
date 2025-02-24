@@ -1,0 +1,11 @@
+[package]
+name = "error_handling"
+version = "0.1.0"
+edition = "2021"
+
+[profile.release]
+# If you need to make the resultant binary as small as possible, you 
+# can switch from unwinding to aborting upon a panic by adding this:
+# panic = 'abort'
+
+[dependencies]
