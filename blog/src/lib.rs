@@ -1,80 +1,57 @@
 pub struct Post {
-    state: Option<Box<dyn State>>,
+    content: String,
+}
+
+pub struct DraftPost {
     content: String,
 }
 
 impl Post {
-    pub fn new() -> Post {
-        Post {
-            state: Some(Box::new(Draft {})),
+    pub fn new() -> DraftPost {
+        DraftPost {
             content: String::new(),
         }
     }
 
+    pub fn content(&self) -> &str {
+        &self.content
+    }
+}
+
+impl DraftPost {
     pub fn add_text(&mut self, text: &str) {
         self.content.push_str(text);
     }
 
-    pub fn content(&self) -> &str {
-        self.state.as_ref().unwrap().content(self)
-    }
-
-    pub fn request_review(&mut self) {
-        if let Some(s) = self.state.take() {
-            self.state = Some(s.request_review())
-        }
-    }
-
-    pub fn approve(&mut self) {
-        if let Some(s) = self.state.take() {
-            self.state = Some(s.approve())
+    pub fn request_review(self) -> PendingReviewPost {
+        PendingReviewPost {
+            content: self.content, 
+            num_approvals: 0,
         }
     }
 }
-
-
-trait State {
-    fn request_review(self: Box<Self>) -> Box<dyn State>;
-    fn approve(self: Box<Self>) -> Box<dyn State>;
-    fn content<'a>(&self, post: &'a Post) -> &'a str {
-        ""
-    }
+#[derive(Debug)]
+pub struct PendingReviewPost {
+    content: String,
+    num_approvals: u32,
 }
 
-struct Draft {}
 
-impl State for Draft {
-    fn request_review(self: Box<Self>) -> Box<dyn State> {
-        Box::new(PendingReview {})
-    }
-    fn approve(self: Box<Self>) -> Box<dyn State> {
-        self
-    }
-}
-
-struct PendingReview {}
-
-impl State for PendingReview {
-    fn request_review(self: Box<Self>) -> Box<dyn State> {
-        self
-    }
-    fn approve(self: Box<Self>) -> Box<dyn State> {
-        Box::new(Published {})
-    }
-}
-
-struct Published {}
-
-impl State for Published {
-    fn request_review(self: Box<Self>) -> Box<dyn State> {
-        self
+impl PendingReviewPost {
+    pub fn approve(self) -> Result<Post,Self> {
+        match self.num_approvals {
+            1 => Ok(Post {
+                content: self.content,
+            }),
+            _ => {
+                Err(Self { content: self.content, num_approvals: self.num_approvals+1 })
+            }
+        }
     }
 
-    fn approve(self: Box<Self>) -> Box<dyn State> {
-        self
-    }
-
-    fn content<'a>(&self, post: &'a Post) -> &'a str {
-        &post.content
-    }
+    pub fn reject(self) -> DraftPost {
+        DraftPost {
+            content: self.content,
+        }
+    } 
 }
